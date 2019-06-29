@@ -22,6 +22,11 @@ class TravelingSalesmanProblem:
     """
 
     def __init__(self, name):
+        """
+        Creates an instance of a TSP
+
+        :param name: name of the TSP problem
+        """
 
         # initialize instance variables:
         self.name = name
@@ -33,6 +38,10 @@ class TravelingSalesmanProblem:
         self.__initData()
 
     def __len__(self):
+        """
+        returns the length of the underlying TSP
+        :return: the length of the underlying TSP (number of cities)
+        """
         return self.tspSize
 
     def __initData(self):
