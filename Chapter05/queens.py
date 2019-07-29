@@ -79,6 +79,7 @@ class NQueensProblem:
             # place the thumbnail on the matching square:
             ax.imshow(queenThumbnail, extent=[j, j, i, i] + thumbnailSpread)
 
+        # show the row and column indexes:
         ax.set(xticks=list(range(self.numOfQueens)), yticks=list(range(self.numOfQueens)))
 
         ax.axis('image')   # scale the plot as square-shaped
@@ -91,16 +92,16 @@ def main():
     # create a problem instance:
     nQueens = NQueensProblem(8)
 
-    # a known sgood solution:
+    # a known good solution:
     #solution = [5, 0, 4, 1, 7, 2, 6, 3]
 
+    # a solution with 3 violations:
     solution = [1, 2, 7, 5, 0, 3, 4, 6]
-    #solution = [3, 2, 0, 1]
 
     print("Number of violations = ", nQueens.getViolationsCount(solution))
 
-    plt = nQueens.plotBoard(solution)
-    plt.show()
+    plot = nQueens.plotBoard(solution)
+    plot.show()
 
 
 if __name__ == "__main__":
