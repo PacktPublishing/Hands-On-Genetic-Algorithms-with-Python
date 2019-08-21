@@ -4,6 +4,7 @@ from deap import tools
 
 import random
 import numpy as np
+import math
 
 import matplotlib.pyplot as plt
 
@@ -11,18 +12,19 @@ import elitism
 
 # problem constants:
 DIMENSIONS = 2  # number of dimensions
-BOUND_LOW, BOUND_UP = -5.0, 5.0  # boundaries for all dimensions
+BOUND_LOW, BOUND_UP = -1.25, 1.25  # boundaries for all dimensions
 
 # Genetic Algorithm constants:
 POPULATION_SIZE = 300
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.5   # (try also 0.5) probability for mutating an individual
+P_MUTATION = 0.5  #0.1   # (try also 0.5) probability for mutating an individual
 MAX_GENERATIONS = 300
 HALL_OF_FAME_SIZE = 30
 CROWDING_FACTOR = 20.0  # crowding factor for crossover and mutation
+PENALTY_VALUE = 10.0    # fixed penalty for violating a constraint
 
 # set the random seed:
-RANDOM_SEED = 42  # try also 17, 13,...
+RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 toolbox = base.Toolbox()
@@ -34,29 +36,41 @@ creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
 
-# helper function for creating random float numbers uniformaly distributed within a given range [low, up]
+# helper function for creating random real numbers uniformly distributed within a given range [low, up]
 # it assumes that the range is the same for every dimension
 def randomFloat(low, up):
-    return [random.uniform(a, b) for a, b in zip([low] * DIMENSIONS, [up] * DIMENSIONS)]
+    return [random.uniform(l, u) for l, u in zip([low] * DIMENSIONS, [up] * DIMENSIONS)]
 
 # create an operator that randomly returns a float in the desired range and dimension:
-toolbox.register("attr_float", randomFloat, BOUND_LOW, BOUND_UP)
+toolbox.register("attrFloat", randomFloat, BOUND_LOW, BOUND_UP)
 
 # create the individual operator to fill up an Individual instance:
-toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.attr_float)
+toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.attrFloat)
 
 # create the population operator to generate a list of individuals:
 toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individualCreator)
 
 
-# Himmelblau function as the given individual's fitness:
-def himmelblau(individual):
+# Simionescu's function as the given individual's fitness:
+def simionescu(individual):
     x = individual[0]
     y = individual[1]
-    f = (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2
+    f = 0.1 * x * y
     return f,  # return a tuple
 
-toolbox.register("evaluate", himmelblau)
+toolbox.register("evaluate", simionescu)
+
+# define the valid input domain using the cosntraints:
+def feasible(individual):
+    """Feasibility function for the individual.
+    Returns True if feasible, False otherwise.
+    """
+    x = individual[0]
+    y = individual[1]
+    return x**2 + y**2 <= (1 + 0.2 * math.cos(8.0 * math.atan2(x, y)))**2
+
+# decorate the fitness function with the delta penalty function:
+toolbox.decorate("evaluate", tools.DeltaPenalty(feasible, PENALTY_VALUE))
 
 # genetic operators:
 toolbox.register("select", tools.selTournament, tournsize=2)
@@ -87,21 +101,10 @@ def main():
     print("-- Best Individual = ", best)
     print("-- Best Fitness = ", best.fitness.values[0])
 
-    print("- Best solutions are:")
-    for i in range(HALL_OF_FAME_SIZE):
-        print(i, ": ", hof.items[i].fitness.values[0], " -> ", hof.items[i])
-
-    # plot solution locations on x-y plane:
-    plt.figure(1)
-    globalMinima = [[3.0, 2.0], [-2.805118, 3.131312], [-3.779310, -3.283186], [3.584458, -1.848126]]
-    plt.scatter(*zip(*globalMinima), marker='X', color='red', zorder=1)
-    plt.scatter(*zip(*population), marker='.', color='blue', zorder=0)
-
     # extract statistics:
     minFitnessValues, meanFitnessValues = logbook.select("min", "avg")
 
     # plot statistics:
-    plt.figure(2)
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')

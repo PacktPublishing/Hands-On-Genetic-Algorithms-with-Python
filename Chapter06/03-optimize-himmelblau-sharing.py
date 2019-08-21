@@ -21,7 +21,9 @@ P_MUTATION = 0.5   # probability for mutating an individual
 MAX_GENERATIONS = 300
 HALL_OF_FAME_SIZE = 30
 CROWDING_FACTOR = 20.0  # crowding factor for crossover and mutation
-SHARING_DISTANCE = 0.1
+
+# sharing constants:
+DISTANCE_THRESHOLD = 0.1
 SHARING_EXTENT = 5.0
 
 # set the random seed:
@@ -31,10 +33,10 @@ random.seed(RANDOM_SEED)
 toolbox = base.Toolbox()
 
 # define a single objective, maximizing fitness strategy:
-creator.create("FitnessMin", base.Fitness, weights=(1.0,))
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
 # create the Individual class based on list:
-creator.create("Individual", list, fitness=creator.FitnessMin)
+creator.create("Individual", list, fitness=creator.FitnessMax)
 
 
 # helper function for creating random float numbers uniformaly distributed within a given range [low, up]
@@ -79,9 +81,8 @@ def selTournamentWithSharing(individuals, k, tournsize, fit_attr="fitness"):
                 distance = math.sqrt(
                     ((individuals[i][0] - individuals[j][0]) ** 2) + ((individuals[i][1] - individuals[j][1]) ** 2))
 
-                if distance < SHARING_DISTANCE:
-                    sharingSum += (1 - distance / (SHARING_EXTENT * SHARING_DISTANCE))
-                    # try also: sharingSum += (1 - distance / SHARING_EXTENT)
+                if distance < DISTANCE_THRESHOLD:
+                    sharingSum += (1 - distance / (SHARING_EXTENT * DISTANCE_THRESHOLD))
 
         # reduce fitness accordingly:
         individuals[i].fitness.values = origFitnesses[i] / sharingSum,
@@ -131,25 +132,25 @@ def main():
 
     # plot solution locations on x-y plane:
     plt.figure(1)
-    globalMinima = [[3.0, 2.0], [-2.805118, 3.131312], [-3.779310, -3.283186], [3.584458, -1.848126]]
-    plt.scatter(*zip(*globalMinima), marker='x', color='red', zorder=1)
+    globalMaxima = [[3.0, 2.0], [-2.805118, 3.131312], [-3.779310, -3.283186], [3.584458, -1.848126]]
+    plt.scatter(*zip(*globalMaxima), marker='x', color='red', zorder=1)
     plt.scatter(*zip(*population), marker='.', color='blue', zorder=0)    # plot solution locations on x-y plane:
 
     # plot best solutions locations on x-y plane:
     plt.figure(2)
-    plt.scatter(*zip(*globalMinima), marker='x', color='red', zorder=1)
+    plt.scatter(*zip(*globalMaxima), marker='x', color='red', zorder=1)
     plt.scatter(*zip(*hof.items), marker='.', color='blue', zorder=0)
 
     # extract statistics:
-    minFitnessValues, meanFitnessValues = logbook.select("max", "avg")
+    maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
     # plot statistics:
     plt.figure(3)
-    plt.plot(minFitnessValues, color='red')
+    plt.plot(maxFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
-    plt.ylabel('Min / Average Fitness')
-    plt.title('Min and Average fitness vs. Generation')
+    plt.ylabel('Max / Average Fitness')
+    plt.title('Max and Average fitness vs. Generation')
 
     plt.show()
 
