@@ -54,16 +54,3 @@ class MlpLayersTest:
 
     def formatParams(self, params):
         return "'hidden_layer_sizes'={}".format(self.convertParams(params))
-
-
-
-def main():
-    RANDOM_SEED = 42
-    test = MlpLayersTest(RANDOM_SEED)
-    params = [100, 0, 0, 0]
-
-    print("accuracy = ", test.getAccuracy(params))
-
-
-if __name__ == "__main__":
-    main()
