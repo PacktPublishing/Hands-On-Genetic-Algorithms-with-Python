@@ -46,7 +46,10 @@ def randomFloat(low, up):
 toolbox.register("attrFloat", randomFloat, BOUNDS_LOW, BOUNDS_HIGH)
 
 # create an operator that fills up an Individual instance:
-toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.attrFloat)
+toolbox.register("individualCreator",
+                 tools.initIterate,
+                 creator.Individual,
+                 toolbox.attrFloat)
 
 # create an operator that generates a list of individuals:
 toolbox.register("populationCreator",
@@ -106,6 +109,7 @@ def main():
 
     # print best solution found:
     best = hof.items[0]
+    print()
     print("Best Solution = ", best)
     print("Best Score = ", best.fitness.values[0])
     print()

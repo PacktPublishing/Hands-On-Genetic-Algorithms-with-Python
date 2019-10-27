@@ -1,11 +1,8 @@
 import gym
 import time
 
-from gym import envs
 import numpy as np
-import random
 import pickle
-import os
 
 from sklearn.neural_network import MLPRegressor
 
@@ -150,8 +147,7 @@ class CartPole:
 
 
 def main():
-    RANDOM_SEED = 42
-    cart = CartPole(RANDOM_SEED)
+    cart = CartPole()
     cart.replayWithSavedParams()
 
     exit()

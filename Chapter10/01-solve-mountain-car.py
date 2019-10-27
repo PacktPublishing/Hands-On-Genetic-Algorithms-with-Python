@@ -5,8 +5,6 @@ from deap import tools
 import random
 import numpy
 
-import matplotlib.pyplot as plt
-
 import mountain_car
 import elitism
 
