@@ -2,7 +2,6 @@ from PIL import Image, ImageDraw
 import numpy as np
 from skimage.metrics import structural_similarity
 import cv2
-import random
 import matplotlib.pyplot as plt
 
 MAX_STEPS = 200
@@ -74,7 +73,7 @@ class ImageTest:
         :return: the calculated difference between the image containg the polygons and the reference image
         """
 
-        # create the image containing th epolygons:
+        # create the image containing the polygons:
         image = self.polygonDataToImage(polygonData)
 
         if method == "MSE":
@@ -131,25 +130,12 @@ class ImageTest:
         """converts the given Pillow image to CV2 format"""
         return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
-    def toGray(self, pil_image): #TODO
-        """converts the given Pillow image to gray CV2 format"""
-        return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2GRAY)
-
     def getMse(self, image):
         """calculates MSE of difference between the given image and the reference image"""
-        #TODO
-        #return np.sum((self.toCv2(image).astype("float") - self.refImageCv2.astype("float")) ** 2)/float(self.numPixels)
-        return np.sum((self.toCv2(image).astype("float") - self.refImageCv2.astype("float")) ** 2)
-        #return np.linalg.norm(self.toCv2(image).astype("float") - self.refImageCv2.astype("float"))
+        return np.sum((self.toCv2(image).astype("float") - self.refImageCv2.astype("float")) ** 2)/float(self.numPixels)
 
     def getSsim(self, image):
         """calculates mean structural similarity index between the given image and the reference image"""
-        return structural_similarity(self.toCv2(image), self.refImageCv2, multichannel=True)
-
-    def getSsimGrey(self, image): #TODO
-        """calculates mean stryctural similarity index between the given image and the reference image"""
-        #imageGray = self.toGray(image)
-        #return structural_similarity(imageGray, self.refImageGray)
         return structural_similarity(self.toCv2(image), self.refImageCv2, multichannel=True)
 
     def list2Chunks(self, list, chunkSize):
@@ -169,20 +155,3 @@ class ImageTest:
             labelbottom=False,
             labelleft=False,
         )
-
-#TODO
-def main():
-
-    POLYGON_SIZE = 3
-    test = ImageTest("images/165px-Mona_Lisa_Head-contrast-01.png", POLYGON_SIZE)
-    polygonData = []
-    for i in range(10):
-        polygonData.extend(np.random.uniform(low=0.0, high=1.0, size=(PLOYGON_SIZE * 2 + 4,)).tolist())
-
-    test.getDifference(polygonData)
-    test.plotImages(test.polygonDataToImage(polygonData))
-
-    plt.show()
-
-if __name__ == '__main__':
-    main()

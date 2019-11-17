@@ -15,23 +15,28 @@ import matplotlib.pyplot as plt
 POLYGON_SIZE = 3
 NUM_OF_POLYGONS = 100
 
+# calculate total number of params in chromosome:
+# For each polygon we have:
+# two coordinates per vertex, 3 color values, one alpha value
+NUM_OF_PARAMS = NUM_OF_POLYGONS * (POLYGON_SIZE * 2 + 4)
+
 # Genetic Algorithm constants:
 POPULATION_SIZE = 200
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.5   # probability for mutating an individual
 MAX_GENERATIONS = 5000
 HALL_OF_FAME_SIZE = 20
-CROWDING_FACTOR = 5.0  # crowding factor for crossover and mutation
+CROWDING_FACTOR = 10.0  # crowding factor for crossover and mutation
 
 # set the random seed:
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 # create the image test class instance:
-imageTest = image_test.ImageTest("images/165px-Mona_Lisa_Head-high-pass.png", POLYGON_SIZE)
+imageTest = image_test.ImageTest("images/Mona_Lisa_Head.png", POLYGON_SIZE)
 
 # calculate total number of params in chromosome:
-# For each polygon:
+# For each polygon we have:
 # two coordinates per vertex, 3 color values, one alpha value
 NUM_OF_PARAMS = NUM_OF_POLYGONS * (POLYGON_SIZE * 2 + 4)
 
@@ -70,7 +75,7 @@ toolbox.register("populationCreator",
 # fitness calculation using MSE as difference metric:
 def getDiff(individual):
     return imageTest.getDifference(individual, "MSE"),
-    #return imageTest.getDiff(individual, "SSIM"),
+    #return imageTest.getDifference(individual, "SSIM"),
 
 toolbox.register("evaluate", getDiff)
 
@@ -95,16 +100,18 @@ toolbox.register("mutate",
 # save the best current drawing every 100 generations (used as a callback):
 def saveImage(gen, polygonData):
 
-    # only for generations 0, 100, 200, ...:
+    # only every 100 generations:
     if gen % 100 == 0:
 
         # create folder if does not exist:
-        folder = "Images/run-{}-{}".format(POLYGON_SIZE, NUM_OF_POLYGONS)
+        folder = "images/results/run-{}-{}".format(POLYGON_SIZE, NUM_OF_POLYGONS)
         if not os.path.exists(folder):
             os.makedirs(folder)
 
         # save the image in the folder:
-        imageTest.saveImage(polygonData, "{}/after-{}-gen.png".format(folder, gen), "After {} Generations".format(gen))
+        imageTest.saveImage(polygonData,
+                            "{}/after-{}-gen.png".format(folder, gen),
+                            "After {} Generations".format(gen))
 
 # Genetic Algorithm flow:
 def main():
@@ -150,8 +157,8 @@ def main():
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
-    plt.ylabel('Min / Max / Average Fitness')
-    plt.title('Min, Max and Average fitness vs. Generation')
+    plt.ylabel('Min / Average Fitness')
+    plt.title('Min and Average fitness vs. Generation')
 
     # show both plots:
     plt.show()
