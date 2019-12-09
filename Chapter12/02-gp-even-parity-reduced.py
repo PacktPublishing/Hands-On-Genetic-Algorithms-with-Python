@@ -46,15 +46,15 @@ for row in parityIn:
     parityOut.append(sum(row) % 2)
 
 # create the primitive set:
-pset = gp.PrimitiveSet("main", NUM_INPUTS, "in_")
-pset.addPrimitive(operator.and_, 2)
-pset.addPrimitive(operator.or_, 2)
-pset.addPrimitive(operator.xor, 2)
-pset.addPrimitive(operator.not_, 1)
+primitiveSet = gp.PrimitiveSet("main", NUM_INPUTS, "in_")
+primitiveSet.addPrimitive(operator.and_, 2)
+primitiveSet.addPrimitive(operator.or_, 2)
+primitiveSet.addPrimitive(operator.xor, 2)
+primitiveSet.addPrimitive(operator.not_, 1)
 
 # add terminal values:
-pset.addTerminal(1)
-pset.addTerminal(0)
+primitiveSet.addTerminal(1)
+primitiveSet.addTerminal(0)
 
 # define a single objective, minimizing fitness strategy:
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -63,7 +63,7 @@ creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)
 
 # create a helper function for creating random trees using the primitive set:
-toolbox.register("expr", gp.genFull, pset=pset, min_=MIN_TREE_HEIGHT, max_=MAX_TREE_HEIGHT)
+toolbox.register("expr", gp.genFull, pset=primitiveSet, min_=MIN_TREE_HEIGHT, max_=MAX_TREE_HEIGHT)
 
 # create the individual operator to fill up an Individual instance:
 toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.expr)
@@ -72,7 +72,7 @@ toolbox.register("individualCreator", tools.initIterate, creator.Individual, too
 toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individualCreator)
 
 # create an operator to compile the primitive tree into python code:
-toolbox.register("compile", gp.compile, pset=pset)
+toolbox.register("compile", gp.compile, pset=primitiveSet)
 
 # calculate the difference between the results of the
 # generated function and the expected parity results:
@@ -90,7 +90,7 @@ toolbox.register("evaluate", getCost)
 toolbox.register("select", tools.selTournament, tournsize=2)
 toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genGrow, min_=MUT_MIN_TREE_HEIGHT, max_=MUT_MAX_TREE_HEIGHT)
-toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
+toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=primitiveSet)
 
 # bloat control:
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=LIMIT_TREE_HEIGHT))
