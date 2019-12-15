@@ -6,6 +6,7 @@ from sklearn import datasets
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 class Friedman1Test:
     """This class encapsulates the Friedman1 regression test for feature selection
@@ -81,11 +82,12 @@ def main():
         scores.append(score)
 
     # plot graph:
+    sns.set_style("whitegrid")
     plt.plot([i + 1 for i in range(len(test))], scores, color='red')
     plt.xticks(np.arange(1, len(test) + 1, 1.0))
     plt.xlabel('n First Features')
     plt.ylabel('MSE')
-    plt.title('MSE vs. Features Selected')
+    plt.title('MSE over Features Selected')
     plt.show()
 
 
