@@ -17,7 +17,7 @@ BOUND_LOW, BOUND_UP = -512.0, 512.0  # boundaries for all dimensions
 # Genetic Algorithm constants:
 POPULATION_SIZE = 300
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.5  #0.1   # (try also 0.5) probability for mutating an individual
+P_MUTATION = 0.1   # (try also 0.5) probability for mutating an individual
 MAX_GENERATIONS = 300
 HALL_OF_FAME_SIZE = 30
 CROWDING_FACTOR = 20.0  # crowding factor for crossover and mutation
