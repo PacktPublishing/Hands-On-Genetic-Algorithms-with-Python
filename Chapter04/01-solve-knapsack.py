@@ -7,6 +7,8 @@ import random
 import numpy
 
 import matplotlib.pyplot as plt
+import seaborn as sns
+
 import knapsack
 
 # problem constants:
@@ -93,11 +95,12 @@ def main():
     maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
     # plot statistics:
+    sns.set_style("whitegrid")
     plt.plot(maxFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Max / Average Fitness')
-    plt.title('Max and Average fitness vs. Generation')
+    plt.title('Max and Average fitness over Generations')
     plt.show()
 
 

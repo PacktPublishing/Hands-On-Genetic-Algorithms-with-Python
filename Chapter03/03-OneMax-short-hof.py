@@ -7,6 +7,7 @@ import random
 import numpy
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # problem constants:
 ONE_MAX_LENGTH = 100  # length of bit string to be optimized
@@ -88,11 +89,13 @@ def main():
     maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
     # plot statistics:
+    sns.set_style("whitegrid")
     plt.plot(maxFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Max / Average Fitness')
-    plt.title('Max and Average fitness vs. Generation')
+    plt.title('Max and Average Fitness over Generations')
+
     plt.show()
 
 

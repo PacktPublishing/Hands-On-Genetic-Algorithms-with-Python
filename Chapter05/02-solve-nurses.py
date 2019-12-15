@@ -1,12 +1,14 @@
 from deap import base
 from deap import creator
 from deap import tools
-import elitism
 
 import random
 import numpy
 
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+import elitism
 import nurses
 
 # problem constants:
@@ -87,11 +89,12 @@ def main():
     minFitnessValues, meanFitnessValues = logbook.select("min", "avg")
 
     # plot statistics:
+    sns.set_style("whitegrid")
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Min / Average Fitness')
-    plt.title('Min and Average fitness vs. Generation')
+    plt.title('Min and Average fitness over Generations')
     plt.show()
 
 

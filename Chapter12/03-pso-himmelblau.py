@@ -122,10 +122,6 @@ def main():
     print("-- Best Particle = ", best)
     print("-- Best Fitness = ", best.fitness.values[0])
 
-    import matplotlib.pyplot as plt
-    # extract statistics:
-    minFitnessValues, meanFitnessValues = logbook.select("min", "avg")
-
 
 if __name__ == "__main__":
     main()

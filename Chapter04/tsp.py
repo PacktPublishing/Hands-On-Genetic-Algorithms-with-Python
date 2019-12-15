@@ -1,5 +1,4 @@
 import csv
-import random
 import pickle
 import os
 import codecs
@@ -108,6 +107,8 @@ class TravelingSalesmanProblem:
                     print("{}, {}: location1 = {}, location2 = {} => distance = {}".format(i, j, self.locations[i], self.locations[j], distance))
 
             # serialize locations and distances:
+            if not os.path.exists("tsp-data"):
+                os.makedirs("tsp-data")
             pickle.dump(self.locations, open(os.path.join("tsp-data", self.name + "-loc.pickle"), "wb"))
             pickle.dump(self.distances, open(os.path.join("tsp-data", self.name + "-dist.pickle"), "wb"))
 

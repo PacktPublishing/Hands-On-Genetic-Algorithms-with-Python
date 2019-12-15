@@ -6,10 +6,12 @@ import random
 import numpy
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 import networkx as nx
 
-import graphs
 import elitism
+import graphs
+
 
 
 # problem constants:
@@ -98,11 +100,12 @@ def main():
 
     # plot statistics:
     plt.figure(2)
+    sns.set_style("whitegrid")
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Min / Average Fitness')
-    plt.title('Min and Average fitness vs. Generation')
+    plt.title('Min and Average fitness over Generations')
 
     plt.show()
 

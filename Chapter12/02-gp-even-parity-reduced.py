@@ -140,7 +140,6 @@ def main():
     nx.draw_networkx_edges(g, pos)
     nx.draw_networkx_labels(g, pos, **{"labels": labels, "font_size": 8})
 
-
     plt.show()
 
 

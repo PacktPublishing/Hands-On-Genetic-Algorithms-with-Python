@@ -10,6 +10,7 @@ import image_test
 import elitism_callback
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # problem related constants
 POLYGON_SIZE = 3
@@ -153,12 +154,13 @@ def main():
     minFitnessValues, meanFitnessValues = logbook.select("min", "avg")
 
     # plot statistics:
+    sns.set_style("whitegrid")
     plt.figure("Stats:")
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Min / Average Fitness')
-    plt.title('Min and Average fitness vs. Generation')
+    plt.title('Min and Average fitness over Generations')
 
     # show both plots:
     plt.show()

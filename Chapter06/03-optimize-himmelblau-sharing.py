@@ -6,6 +6,7 @@ import random
 import numpy as np
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import math
 import elitism
@@ -146,11 +147,12 @@ def main():
 
     # plot statistics:
     plt.figure(3)
+    sns.set_style("whitegrid")
     plt.plot(maxFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Max / Average Fitness')
-    plt.title('Max and Average fitness vs. Generation')
+    plt.title('Max and Average fitness over Generations')
 
     plt.show()
 
