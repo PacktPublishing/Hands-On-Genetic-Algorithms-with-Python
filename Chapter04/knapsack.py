@@ -47,6 +47,9 @@ class Knapsack01Problem:
             ("book", 30, 10)
         ]
 
+        # use a greedy heuristic to sort the items in decreasing order of their value to weight ratio
+        self.items = sorted(self.items, key=lambda item: item[2] / item[1], reverse=True)
+
         self.maxCapacity = 400
 
     def getValue(self, zeroOneList):
