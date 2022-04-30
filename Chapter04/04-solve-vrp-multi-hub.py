@@ -19,8 +19,8 @@ random.seed(RANDOM_SEED)
 # create the desired vehicle routing problem using a traveling salesman problem instance:
 TSP_NAME = "bayg29"
 NUM_OF_VEHICLES = 3
-DEPOT_LOCATION = 10
-vrp = vrp.VehicleRoutingProblem(TSP_NAME, NUM_OF_VEHICLES, DEPOT_LOCATION)
+DEPOT_LOCATIONS = [8, 10, 12]
+vrp = vrp.VehicleRoutingProblem(TSP_NAME, NUM_OF_VEHICLES, DEPOT_LOCATIONS)
 
 # Genetic Algorithm constants:
 POPULATION_SIZE = 500
