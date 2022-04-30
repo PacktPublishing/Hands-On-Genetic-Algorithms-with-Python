@@ -16,7 +16,10 @@ class VehicleRoutingProblem:
         :param depotIndex: the index of the TSP city that will be used as the depot location
         """
         self.tsp = tsp.TravelingSalesmanProblem(tspName)
-        self.numOfVehicles = numOfVehicles
+        if isinstance(depotIndex, (list, tuple)):
+            self.numOfVehicles = len(depotIndex)
+        else:
+            self.numOfVehicles = numOfVehicles
         self.depotIndex = depotIndex
 
     def __len__(self):
@@ -42,7 +45,7 @@ class VehicleRoutingProblem:
         for i in indices:
 
             # skip depot index:
-            if i == self.depotIndex:
+            if self.isDepotIndex(i):
                 continue
 
             # index is part of the current route:
@@ -69,7 +72,16 @@ class VehicleRoutingProblem:
         # check if the index is larger than the number of the participating locations:
         return index >= len(self) - (self.numOfVehicles - 1)
 
-    def getRouteDistance(self, indices):
+    def isDepotIndex(self, index):
+        """
+        Finds if curent index is depot index or in array of depot index
+        :param index: denotes the index of the location
+        :return: True if the given index is a depot
+        """
+        # check if the index is depot index or in array of depot index:
+        return index in self.depotIndex if isinstance(self.depotIndex, (list, tuple)) else index == self.depotIndex
+
+    def getRouteDistance(self, indices, depoIdx):
         """Calculates total the distance of the path that starts at the depo location and goes through
         the cities described by the given indices
 
@@ -80,10 +92,10 @@ class VehicleRoutingProblem:
             return 0
 
         # find the distance between the depo location and the city:
-        distance = self.tsp.distances[self.depotIndex][indices[0]]
+        distance = self.tsp.distances[depoIdx][indices[0]]
 
         # add the distance between the last city and the depot location:
-        distance += self.tsp.distances[indices[-1]][self.depotIndex]
+        distance += self.tsp.distances[indices[-1]][depoIdx]
 
         # add the distances between the cities along the route:
         for i in range(len(indices) - 1):
@@ -97,8 +109,9 @@ class VehicleRoutingProblem:
         :return: combined distance of the various paths described by the given indices
         """
         totalDistance = 0
-        for route in self.getRoutes(indices):
-            routeDistance = self.getRouteDistance(route)
+        for routeIdx, route in enumerate(self.getRoutes(indices)):
+            depoIdx = self.depotIndex[routeIdx] if isinstance(self.depotIndex, (tuple, list)) else self.depotIndex
+            routeDistance = self.getRouteDistance(route, depoIdx)
             #print("- route distance = ", routeDistance)
             totalDistance += routeDistance
         return totalDistance
@@ -110,8 +123,9 @@ class VehicleRoutingProblem:
         :return: max distance among the distances of the various paths described by the given indices
         """
         maxDistance = 0
-        for route in self.getRoutes(indices):
-            routeDistance = self.getRouteDistance(route)
+        for routeIdx, route in enumerate(self.getRoutes(indices)):
+            depoIdx = self.depotIndex[routeIdx] if isinstance(self.depotIndex, (tuple, list)) else self.depotIndex
+            routeDistance = self.getRouteDistance(route, depoIdx)
             #print("- route distance = ", routeDistance)
             maxDistance = max(routeDistance, maxDistance)
         return maxDistance
@@ -127,9 +141,10 @@ class VehicleRoutingProblem:
         routes = self.getRoutes(indices)
         totalDistance = 0
         counter = 0
-        for route in routes:
+        for routeIdx, route in enumerate(self.getRoutes(indices)):
             if route:  # consider only routes that are not empty
-                routeDistance = self.getRouteDistance(route)
+                depoIdx = self.depotIndex[routeIdx] if isinstance(self.depotIndex, (tuple, list)) else self.depotIndex
+                routeDistance = self.getRouteDistance(route, depoIdx)
                 # print("- route distance = ", routeDistance)
                 totalDistance += routeDistance
                 counter += 1
@@ -142,18 +157,20 @@ class VehicleRoutingProblem:
         :return: the resulting plot
         """
 
-        # plot th ecities of the underlying TSP:
+        # plot th cities of the underlying TSP:
         plt.scatter(*zip(*self.tsp.locations), marker='.', color='red')
 
         # mark the depot location with a large 'X':
-        d = self.tsp.locations[self.depotIndex]
-        plt.plot(d[0], d[1], marker='x', markersize=10, color='green')
+        depos = self.depotIndex if isinstance(self.depotIndex, (list, tuple)) else [self.depotIndex]
+        d = [self.tsp.locations[i] for i in depos]
+        plt.plot(*zip(*d), marker='x', markersize=10, color='green', ls='None')
 
         # break the indices to separate routes and plot each route in a different color:
         routes = self.getRoutes(indices)
         color = iter(plt.cm.rainbow(np.linspace(0, 1, self.numOfVehicles)))
-        for route in routes:
-            route = [self.depotIndex] + route + [self.depotIndex]
+        for routeIdx, route in enumerate(routes):
+            depoIdx = self.depotIndex[routeIdx] if isinstance(self.depotIndex, (list, tuple)) else self.depotIndex
+            route = [depoIdx] + route + [depoIdx]
             stops = [self.tsp.locations[i] for i in route]
             plt.plot(*zip(*stops), linestyle='-', color=next(color))
 
