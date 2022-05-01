@@ -18,7 +18,7 @@ random.seed(RANDOM_SEED)
 
 # create the desired vehicle routing problem using a traveling salesman problem instance:
 TSP_NAME = "bayg29"
-NUM_OF_VEHICLES = 3
+NUM_OF_VEHICLES = 6
 DEPOT_LOCATIONS = [8, 10, 12]
 vrp = vrp.VehicleRoutingProblem(TSP_NAME, NUM_OF_VEHICLES, DEPOT_LOCATIONS)
 
@@ -27,7 +27,7 @@ POPULATION_SIZE = 500
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.2   # probability for mutating an individual
 MAX_GENERATIONS = 1000
-HALL_OF_FAME_SIZE = 30
+HALL_OF_FAME_SIZE = 1
 
 toolbox = base.Toolbox()
 
@@ -50,7 +50,7 @@ toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individual
 # fitness calculation - compute the max distance that the vehicles covered
 # for the given list of cities represented by indices:
 def vrpDistance(individual):
-    return vrp.getMaxDistance(individual),  # return a tuple
+    return vrp.getMaxDistance(individual) + 0.3 * vrp.getTotalDistance(individual),  # return a tuple
 
 
 toolbox.register("evaluate", vrpDistance)

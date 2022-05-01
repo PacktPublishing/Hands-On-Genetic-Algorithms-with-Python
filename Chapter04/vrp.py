@@ -3,6 +3,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+from itertools import chain
+
 import tsp
 
 
@@ -16,11 +18,14 @@ class VehicleRoutingProblem:
         :param depotIndex: the index of the TSP city that will be used as the depot location
         """
         self.tsp = tsp.TravelingSalesmanProblem(tspName)
+        self.numOfVehicles = numOfVehicles
+
         if isinstance(depotIndex, (list, tuple)):
-            self.numOfVehicles = len(depotIndex)
+            self.depotIndex = list(chain(depotIndex * numOfVehicles))
         else:
-            self.numOfVehicles = numOfVehicles
-        self.depotIndex = depotIndex
+            self.depotIndex = depotIndex
+
+        print(depotIndex)
 
     def __len__(self):
         """
@@ -60,6 +65,10 @@ class VehicleRoutingProblem:
         # append the last route:
         if route or self.isSeparatorIndex(i):
             routes.append(route)
+
+        # if number of routes exceeds number of vehicles, concatenate last routes to one
+        if len(routes) > self.numOfVehicles:
+            routes = routes[:self.numOfVehicles - 1] + [list(chain(*routes[self.numOfVehicles - 1:]))]
 
         return routes
 
@@ -167,7 +176,7 @@ class VehicleRoutingProblem:
 
         # break the indices to separate routes and plot each route in a different color:
         routes = self.getRoutes(indices)
-        color = iter(plt.cm.rainbow(np.linspace(0, 1, self.numOfVehicles)))
+        color = iter(plt.cm.rainbow(np.linspace(0, 1, len(routes))))
         for routeIdx, route in enumerate(routes):
             depoIdx = self.depotIndex[routeIdx] if isinstance(self.depotIndex, (list, tuple)) else self.depotIndex
             route = [depoIdx] + route + [depoIdx]
