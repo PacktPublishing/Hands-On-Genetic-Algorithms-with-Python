@@ -6,3 +6,5 @@
 .idea/vcs.xml
 .idea/workspace.xml
 *.ipynb_checkpoints/
+*/__pycache__/
+.DS_Store
