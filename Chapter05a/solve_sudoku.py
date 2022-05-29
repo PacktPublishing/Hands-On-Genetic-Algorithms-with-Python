@@ -27,11 +27,11 @@ SUDOKU_PUZZLE = [
 ]
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 2000
+POPULATION_SIZE = 8000
 MAX_GENERATIONS = 200
-HALL_OF_FAME_SIZE = 10
+HALL_OF_FAME_SIZE = 5
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.1   # probability for mutating an individual
+P_MUTATION = 0.2   # probability for mutating an individual
 
 # set the random seed for repeatable results
 RANDOM_SEED = 50
@@ -46,15 +46,20 @@ toolbox = base.Toolbox()
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 
 # create the Individual class based on list of lists:
-creator.create("Individual", np.ndarray, typecode='i', fitness=creator.FitnessMin)
+creator.create("Individual", list, typecode='i', fitness=creator.FitnessMin)
 
 
-def random_sudoku(size=9):
-    return np.array([list(random.sample(range(size), size)) for _ in range(size)])
+def random_sudoku(size, lengths):
+    new_sudoku = list()
+    for i in range(size):
+        new_row = random.sample(range(lengths[i]), lengths[i])
+        new_sudoku.append(new_row)
+
+    return new_sudoku
 
 
 # create an operator that generates randomly shuffled indices:
-toolbox.register("randomSudoku", random_sudoku, len(SUDOKU_PUZZLE))
+toolbox.register("randomSudoku", random_sudoku, n_sudoku.size, n_sudoku.n_empty)
 
 # create the individual creation operator to fill up an Individual instance with shuffled indices:
 toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.randomSudoku)
@@ -65,7 +70,7 @@ toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individual
 
 # fitness calculation - compute the total distance of the list of cities represented by indices:
 def get_violations_count(individual):
-    violations = n_sudoku.get_preset_violation_count(individual) + n_sudoku.get_position_violation_count(individual)
+    violations = n_sudoku.get_position_violation_count(individual)
     return violations,  # return a tuple
 
 
@@ -93,12 +98,12 @@ def multiline_shuffle_ind(ind, indpb):
 
 
 def np_equal(a, b):
-    return np.all(a==b)
+    return np.all(a == b)
 
 
-toolbox.register("select", tools.selTournament, tournsize=4)
+toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("mate", multiline_upmx, indpb=2.0/len(SUDOKU_PUZZLE))
-toolbox.register("mutate", multiline_shuffle_ind, indpb=1.0/len(SUDOKU_PUZZLE))
+toolbox.register("mutate", multiline_shuffle_ind, indpb=2.0/len(SUDOKU_PUZZLE))
 
 
 # Genetic Algorithm flow:
@@ -118,6 +123,7 @@ def main():
     # perform the Genetic Algorithm flow with hof feature added:
     # new_population, logbook = elitism.eaSimpleWithElitism(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
     #                                                       ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
+
     new_population, logbook = algorithms.eaSimple(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
                                                           ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
                                                           verbose=True)
@@ -139,7 +145,7 @@ def main():
 
     # plot best solution:
     sns.set_style("whitegrid", {'axes.grid' : False})
-    n_sudoku.plot_sudoku(hof.items[0])
+    n_sudoku.plot_solution(hof.items[0])
 
     # show both plots:
     plt.show()
