@@ -15,26 +15,26 @@ import sudoku
 
 # problem constants:
 SUDOKU_PUZZLE = [
-    [0, 3, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 9, 5, 0, 0, 0],
-    [0, 0, 8, 0, 0, 0, 0, 6, 0],
-    [8, 0, 0, 0, 6, 0, 0, 0, 0],
-    [4, 0, 0, 8, 0, 0, 0, 0, 1],
-    [0, 0, 0, 0, 2, 0, 0, 0, 0],
-    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-    [0, 0, 0, 0, 0, 0, 0, 7, 0]
+    [4, 0, 0, 3, 0, 0, 0, 0, 7],
+    [0, 0, 0, 0, 6, 0, 0, 0, 0],
+    [5, 0, 0, 0, 2, 0, 0, 0, 0],
+    [0, 0, 0, 4, 0, 0, 0, 1, 0],
+    [6, 5, 2, 0, 3, 0, 0, 0, 0],
+    [0, 0, 0, 5, 0, 0, 9, 0, 0],
+    [7, 3, 1, 0, 0, 0, 0, 2, 8],
+    [0, 4, 0, 0, 0, 0, 1, 6, 0],
+    [0, 0, 0, 0, 0, 8, 0, 0, 0]
 ]
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 8000
-MAX_GENERATIONS = 200
-HALL_OF_FAME_SIZE = 5
+POPULATION_SIZE = 128000
+MAX_GENERATIONS = 500
+HALL_OF_FAME_SIZE = 200
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.2   # probability for mutating an individual
+P_MUTATION = 0.4  # probability for mutating an individual
 
 # set the random seed for repeatable results
-RANDOM_SEED = 50
+RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 # create the desired sudoku problem
@@ -101,9 +101,9 @@ def np_equal(a, b):
     return np.all(a == b)
 
 
-toolbox.register("select", tools.selTournament, tournsize=3)
+toolbox.register("select", tools.selTournament, tournsize=4)
 toolbox.register("mate", multiline_upmx, indpb=2.0/len(SUDOKU_PUZZLE))
-toolbox.register("mutate", multiline_shuffle_ind, indpb=2.0/len(SUDOKU_PUZZLE))
+toolbox.register("mutate", multiline_shuffle_ind, indpb=3.0/len(SUDOKU_PUZZLE))
 
 
 # Genetic Algorithm flow:
@@ -121,12 +121,12 @@ def main():
     hof = tools.HallOfFame(HALL_OF_FAME_SIZE, similar=np_equal)
 
     # perform the Genetic Algorithm flow with hof feature added:
-    # new_population, logbook = elitism.eaSimpleWithElitism(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
-    #                                                       ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
+    new_population, logbook = elitism.eaSimpleWithElitism(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
+                                                          ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
 
-    new_population, logbook = algorithms.eaSimple(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
-                                                          ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
-                                                          verbose=True)
+    # new_population, logbook = algorithms.eaSimple(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
+    #                                                       ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
+    #                                                       verbose=True)
 
     # print hall of fame members info:
     print("- Best solutions are:")

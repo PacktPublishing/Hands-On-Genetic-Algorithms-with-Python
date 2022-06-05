@@ -58,5 +58,8 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
         if verbose:
             print(logbook.stream)
 
+        if min(logbook.select('min')) == 0:
+            break
+
     return population, logbook
 

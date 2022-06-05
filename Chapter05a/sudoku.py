@@ -76,6 +76,9 @@ class SudokuProblem:
             for j in range(0, 8, 3):
                 violations += 9 - len(set(np.reshape(mapped_solution[i:i+3, j:j+3], -1, 1)))
 
+        if 2 <= violations <= 4:
+            violations = 2
+
         return violations
 
     def plot_solution(self, solution):
