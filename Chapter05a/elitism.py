@@ -1,8 +1,9 @@
 from deap import tools
 from deap import algorithms
+import random
 
 def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__):
+             halloffame=None, verbose=__debug__, stuck=1e9):
     """This algorithm is similar to DEAP eaSimple() algorithm, with the modification that
     halloffame is used to implement an elitism mechanism. The individuals contained in the
     halloffame are directly injected into the next generation and are not subject to the
@@ -28,11 +29,41 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
     if verbose:
         print(logbook.stream)
 
+    stuck_count = 0
+    last_min = False
+
+    save_mutpb = mutpb
+    radiation = 0
+
     # Begin the generational process
     for gen in range(1, ngen + 1):
 
+        radiation = max(radiation - 1, 0)
+        if radiation == 0:
+            mutpb = save_mutpb
+        else:
+            stuck_count = 0
+
         # Select the next generation individuals
-        offspring = toolbox.select(population, len(population) - hof_size)
+        if stuck[0] < stuck_count:
+            if stuck[1] == 'comet':
+                # Generate new population for non-hof (Comet-Strike)
+                print('the comet strikes')
+                offspring = toolbox.populationCreator(len(population) - 3)
+                offspring.extend(halloffame.items[:3])
+                halloffame.clear()
+            if stuck[1] == 'chernobyl':
+                print('radiation leak')
+                mutpb = 0.6
+                radiation = 500
+                offspring = toolbox.select(population, len(population) - 10)
+                offspring.extend(random.sample(halloffame.items, 10))
+                halloffame.clear()
+
+            stuck_count = 0
+        else:
+            # Use defined selection algorithm
+            offspring = toolbox.select(population, len(population) - hof_size)
 
         # Vary the pool of individuals
         offspring = algorithms.varAnd(offspring, toolbox, cxpb, mutpb)
@@ -58,7 +89,21 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
         if verbose:
             print(logbook.stream)
 
-        if min(logbook.select('min')) == 0:
+        # Check if minimum has change vs previous iteration, else rais stuck_count
+        new_min = min(logbook.select('min'))
+
+        if last_min:
+            if new_min == last_min:
+                stuck_count += 1
+            else:
+                stuck_count = 0
+
+        print(f'stuck count is {stuck_count}')
+
+        last_min = new_min
+
+        # early stopping, if zero is reached (optimum)
+        if last_min == 0:
             break
 
     return population, logbook

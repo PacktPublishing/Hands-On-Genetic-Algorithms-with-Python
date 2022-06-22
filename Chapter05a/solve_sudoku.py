@@ -27,9 +27,9 @@ SUDOKU_PUZZLE = [
 ]
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 128000
+POPULATION_SIZE = 10000
 MAX_GENERATIONS = 500
-HALL_OF_FAME_SIZE = 200
+HALL_OF_FAME_SIZE = 100
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.4  # probability for mutating an individual
 
@@ -122,7 +122,8 @@ def main():
 
     # perform the Genetic Algorithm flow with hof feature added:
     new_population, logbook = elitism.eaSimpleWithElitism(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
-                                                          ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
+                                                          ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
+                                                          verbose=True, stuck=(50, 'chernobyl'))
 
     # new_population, logbook = algorithms.eaSimple(new_population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
     #                                                       ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
