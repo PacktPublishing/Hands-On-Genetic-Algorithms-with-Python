@@ -2,8 +2,9 @@ from deap import tools
 from deap import algorithms
 import random
 
+
 def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, stuck=1e9):
+             halloffame=None, verbose=__debug__, stuck=(1e9, None)):
     """This algorithm is similar to DEAP eaSimple() algorithm, with the modification that
     halloffame is used to implement an elitism mechanism. The individuals contained in the
     halloffame are directly injected into the next generation and are not subject to the
@@ -43,6 +44,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
             mutpb = save_mutpb
         else:
             stuck_count = 0
+            print(f'radiation is {radiation}')
 
         # Select the next generation individuals
         if stuck[0] < stuck_count:
@@ -54,12 +56,8 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
                 halloffame.clear()
             if stuck[1] == 'chernobyl':
                 print('radiation leak')
-                mutpb = 0.6
-                radiation = 500
-                offspring = toolbox.select(population, len(population) - 10)
-                offspring.extend(random.sample(halloffame.items, 10))
-                halloffame.clear()
-
+                mutpb = 0.5
+                radiation = stuck[0]
             stuck_count = 0
         else:
             # Use defined selection algorithm
@@ -98,7 +96,8 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
             else:
                 stuck_count = 0
 
-        print(f'stuck count is {stuck_count}')
+        if radiation == 0:
+            print(f'stuck count is {stuck_count}')
 
         last_min = new_min
 

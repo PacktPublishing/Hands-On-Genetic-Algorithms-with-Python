@@ -15,23 +15,25 @@ import sudoku
 
 # problem constants:
 SUDOKU_PUZZLE = [
-    [4, 0, 0, 3, 0, 0, 0, 0, 7],
-    [0, 0, 0, 0, 6, 0, 0, 0, 0],
-    [5, 0, 0, 0, 2, 0, 0, 0, 0],
-    [0, 0, 0, 4, 0, 0, 0, 1, 0],
-    [6, 5, 2, 0, 3, 0, 0, 0, 0],
-    [0, 0, 0, 5, 0, 0, 9, 0, 0],
-    [7, 3, 1, 0, 0, 0, 0, 2, 8],
-    [0, 4, 0, 0, 0, 0, 1, 6, 0],
-    [0, 0, 0, 0, 0, 8, 0, 0, 0]
+    [0, 0, 0,   0, 1, 3,   0, 0, 0],
+    [0, 0, 0,   0, 0, 0,   6, 7, 4],
+    [0, 4, 9,   0, 0, 0,   0, 0, 0],
+
+    [0, 0, 0,   0, 0, 0,   5, 9, 0],
+    [0, 0, 0,   0, 8, 7,   0, 0, 0],
+    [6, 9, 1,   0, 0, 0,   0, 0, 0],
+
+    [1, 0, 0,   7, 0, 4,   0, 0, 0],
+    [2, 0, 0,   6, 0, 0,   0, 0, 1],
+    [0, 5, 0,   0, 0, 0,   0, 4, 3]
 ]
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 10000
-MAX_GENERATIONS = 500
-HALL_OF_FAME_SIZE = 100
+POPULATION_SIZE = 20000
+MAX_GENERATIONS = 1000
+HALL_OF_FAME_SIZE = 1000
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.4  # probability for mutating an individual
+P_MUTATION = 0.2  # probability for mutating an individual
 
 # set the random seed for repeatable results
 RANDOM_SEED = 42
@@ -89,6 +91,14 @@ def multiline_upmx(ind1, ind2, indpb):
     return ind1, ind2
 
 
+def swap_cx(ind1, ind2, indpb):
+    for i in range(len(ind1)):
+        if random.random() <= indpb:
+            ind1[i], ind2[i] = ind2[i], ind1[i]
+
+    return ind1, ind2
+
+
 def multiline_shuffle_ind(ind, indpb):
     for i in range(len(ind)):
         ind_i = tools.mutShuffleIndexes(ind[i], indpb)
@@ -97,13 +107,22 @@ def multiline_shuffle_ind(ind, indpb):
     return ind,
 
 
+def simple_swap_mutation(ind, indpb):
+    for i in range(len(ind)):
+        if random.random() <= indpb:
+            id1, id2 = random.sample(range(len(ind[i])), 2)
+            ind[i][id1], ind[i][id2] = ind[i][id2], ind[i][id1]
+
+    return ind,
+
+
 def np_equal(a, b):
     return np.all(a == b)
 
 
-toolbox.register("select", tools.selTournament, tournsize=4)
-toolbox.register("mate", multiline_upmx, indpb=2.0/len(SUDOKU_PUZZLE))
-toolbox.register("mutate", multiline_shuffle_ind, indpb=3.0/len(SUDOKU_PUZZLE))
+toolbox.register("select", tools.selTournament, tournsize=2)
+toolbox.register("mate", swap_cx, indpb=1.0/len(SUDOKU_PUZZLE))
+toolbox.register("mutate", simple_swap_mutation, indpb=1.0/len(SUDOKU_PUZZLE))
 
 
 # Genetic Algorithm flow:
