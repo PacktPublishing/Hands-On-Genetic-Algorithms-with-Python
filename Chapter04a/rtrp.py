@@ -1,116 +1,36 @@
-import csv
-import pickle
-import os
-import codecs
-
 import numpy as np
+import turtle
+from itertools import product
+import random
 
-from urllib.request import urlopen
 
-import matplotlib.pyplot as plt
+class RoundTripProblem:
+    """This class encapsulates the Round Trip Problem as can be
+    seen here: https://www.janko.at/Raetsel/Rundreise/index.htm.
+    The tiles of the playing field are represented as an array of (x, y) coordinates.
+    For GA purposes these are mapped to integers that can be treated as an ordered list.
+    The total distance can be calculated for a path represented by this list of tile indices.
+    A turtle plot can be created for a path represented by a list of tile indices.
 
-
-class TravelingSalesmanProblem:
-    """This class encapsulates the Traveling Salesman Problem.
-    City coordinates are read from an online file and distance matrix is calculated.
-    The data is serialized to disk.
-    The total distance can be calculated for a path represented by a list of city indices.
-    A plot can be created for a path represented by a list of city indices.
-
-    :param name: The name of the corresponding TSPLIB problem, e.g. 'burma14' or 'bayg29'.
+    :order: The size of the playing field (one side in squares).
+    :holes: Array of (x, y) coordinates to be blacked out on playing field.
     """
 
-    def __init__(self, name):
+    def __init__(self, order, holes):
         """
-        Creates an instance of a TSP
+        Creates an instance of a RTRP
 
-        :param name: name of the TSP problem
+        :order: The size of the playing field (one side in squares).
+        :holes: Array of (x, y) coordinates to be blacked out on playing field.
         """
 
         # initialize instance variables:
-        self.name = name
-        self.locations = []
-        self.distances = []
-        self.tspSize = 0
+        self.order = order
+        self.holes = holes
 
-        # initialize the data:
-        self.__initData()
-
-    def __len__(self):
-        """
-        returns the length of the underlying TSP
-        :return: the length of the underlying TSP (number of cities)
-        """
-        return self.tspSize
-
-    def __initData(self):
-        """Reads the serialized data, and if not available - calls __create_data() to prepare it
-        """
-
-        # attempt to read serialized data:
-        try:
-            self.locations = pickle.load(open(os.path.join("tsp-data", self.name + "-loc.pickle"), "rb"))
-            self.distances = pickle.load(open(os.path.join("tsp-data", self.name + "-dist.pickle"), "rb"))
-        except (OSError, IOError):
-            pass
-
-        # serailized data not found - create the data from scratch:
-        if not self.locations or not self.distances:
-            self.__createData()
-
-        # set the problem 'size':
-        self.tspSize = len(self.locations)
-
-    def __createData(self):
-        """Reads the desired TSP file from the Internet, extracts the city coordinates, calculates the distances
-        between every two cities and uses them to populate a distance matrix (two-dimensional array).
-        It then serializes the city locations and the calculated distances to disk using the pickle utility.
-        """
-        self.locations = []
-
-        # open whitespace-delimited file from url and read lines from it:
-        with urlopen("http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/" + self.name + ".tsp") as f:
-            reader = csv.reader(codecs.iterdecode(f, 'utf-8'), delimiter=" ", skipinitialspace=True)
-
-            # skip lines until one of these lines is found:
-            for row in reader:
-                if row[0] in ('DISPLAY_DATA_SECTION', 'NODE_COORD_SECTION'):
-                    break
-
-            # read data lines until 'EOF' found:
-            for row in reader:
-                if row[0] != 'EOF':
-                    # remove index at beginning of line:
-                    del row[0]
-
-                    # convert x,y coordinates to ndarray:
-                    self.locations.append(np.asarray(row, dtype=np.float32))
-                else:
-                    break
-
-            # set the problem 'size':
-            self.tspSize = len(self.locations)
-
-            # print data:
-            print("length = {}, locations = {}".format(self.tspSize, self.locations))
-
-            # initialize distance matrix by filling it with 0's:
-            self.distances = [[0] * self.tspSize for _ in range(self.tspSize)]
-
-            # populate the distance matrix with calculated distances:
-            for i in range(self.tspSize):
-                for j in range(i + 1, self.tspSize):
-                    # calculate euclidean distance between two ndarrays:
-                    distance = np.linalg.norm(self.locations[j] - self.locations[i])
-                    self.distances[i][j] = distance
-                    self.distances[j][i] = distance
-                    print("{}, {}: location1 = {}, location2 = {} => distance = {}".format(i, j, self.locations[i], self.locations[j], distance))
-
-            # serialize locations and distances:
-            if not os.path.exists("tsp-data"):
-                os.makedirs("tsp-data")
-            pickle.dump(self.locations, open(os.path.join("tsp-data", self.name + "-loc.pickle"), "wb"))
-            pickle.dump(self.distances, open(os.path.join("tsp-data", self.name + "-dist.pickle"), "wb"))
+        # build coordinate list and remove holes
+        self.tiles = [coord for coord in product(range(self.order), repeat=2) if coord not in self.holes]
+        self.tiles_dict = {i: j for i, j in enumerate(self.tiles)}
 
     def getTotalDistance(self, indices):
         """Calculates the total distance of the path described by the given indices of the cities
@@ -127,44 +47,94 @@ class TravelingSalesmanProblem:
 
         return distance
 
-    def plotData(self, indices):
-        """plots the path described by the given indices of the cities
+    def plotData(self, path):
+        """plots the path described by the given indices of the tiles.
 
-        :param indices: A list of ordered city indices describing the given path.
-        :return: the resulting plot
+        :param path: A list of ordered tile indices describing the given path.
+        :return: nothing
         """
 
-        # plot the dots representing the cities:
-        plt.scatter(*zip(*self.locations), marker='.', color='red')
+        bob = turtle.Turtle()
+        bob.color('black', 'red')
 
-        # create a list of the corresponding city locations:
-        locs = [self.locations[i] for i in indices]
-        locs.append(locs[0])
+        def draw_lines(ind, pos0, orient, step, order):
+            pos_xn, pos_yn = pos0
+            angle = 0 if orient == 'h' else 270
+            ind.setheading(angle)
+            for i in range(order - 1):
+                ind.penup()
+                if orient == 'h':
+                    pos_yn += -step
+                else:
+                    pos_xn += step
+                ind.setposition(pos_xn, pos_yn)
+                bob.pendown()
+                bob.forward(step * order)
 
-        # plot a line between each pair of consequtive cities:
-        plt.plot(*zip(*locs), linestyle='-', color='blue')
+        def draw_square(ind, pos0, size, fill=False):
+            pos_xn, pos_yn = pos0
+            ind.penup()
+            ind.setheading(0)
+            ind.setposition(pos_xn, pos_yn)
+            ind.pendown()
+            if fill:
+                ind.begin_fill()
+            for i in range(4):
+                ind.forward(size)
+                ind.right(90)
+            if fill:
+                ind.end_fill()
 
-        return plt
+        def draw_grid(ind, order):
+
+            speed = ind.speed()
+            ind.speed(10)
+            pos_x, pos_y = -300, 300
+            step = int(600 / order)
+
+            draw_lines(ind, (pos_x, pos_y), 'h', step, order)
+            draw_lines(ind, (pos_x, pos_y), 'v', step, order)
+            draw_square(ind, (pos_x, pos_y), step * order)
+            ind.speed(speed)
+
+        draw_grid(bob, self.order)
+
+        # step0 = int(600 / self.order)
+
+        # start_x = coordinate_dict[path[0]][0] * step0 - 300 + 0.5 * step0
+        # start_y = -coordinate_dict[path[0]][0] * step0 + 300 - 0.5 * step0
+        #
+        # bob.penup()
+        # bob.setposition(start_x, start_y)
+        # bob.pendown()
+        # bob.pencolor('red')
+        #
+        # for waypoint in path[1:]:
+        #     new_x = coordinate_dict[waypoint][0] * step0 - 300 + 0.5 * step0
+        #     new_y = -coordinate_dict[waypoint][1] * step0 + 300 - 0.5 * step0
+        #     bob.setposition(new_x, new_y)
+        #     time.sleep(1)
+
+        turtle.done()
 
 
 # testing the class:
 def main():
     # create a problem instance:
-    tsp = TravelingSalesmanProblem("bayg29")
+    rtrp = RoundTripProblem(3, [(0, 0)])
 
     # generate a random solution and evaluate it:
     #randomSolution = random.sample(range(len(tsp)), len(tsp))
 
     # see http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/bayg29.opt.tour
-    optimalSolution = [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23]
+    # optimalSolution = [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23]
 
-    print("Problem name: " + tsp.name)
-    print("Optimal solution = ", optimalSolution)
-    print("Optimal distance = ", tsp.getTotalDistance(optimalSolution))
+    print("Problem tiles: ", rtrp.tiles)
+    # print("Optimal solution = ", optimalSolution)
+    # print("Optimal distance = ", tsp.getTotalDistance(optimalSolution))
 
     # plot the solution:
-    plot = tsp.plotData(optimalSolution)
-    plot.show()
+    rtrp.plotData([])
 
 
 if __name__ == "__main__":
