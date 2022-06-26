@@ -97,7 +97,15 @@ class RoundTripProblem:
             draw_square(ind, (pos_x, pos_y), step * order)
             ind.speed(speed)
 
+        # draw the basic playing field
         draw_grid(bob, self.order)
+
+        step1 = int(600 / self.order)
+
+        for hole in self.holes:
+            hole_x = hole[0] * step1 - 300
+            hole_y = -hole[1] * step1 + 300
+            draw_square(bob, (hole_x, hole_y), step1, True)
 
         # step0 = int(600 / self.order)
 
@@ -121,7 +129,7 @@ class RoundTripProblem:
 # testing the class:
 def main():
     # create a problem instance:
-    rtrp = RoundTripProblem(3, [(0, 0)])
+    rtrp = RoundTripProblem(8, [(1, 1), (0, 4), (2, 3), (2, 5), (3, 2), (4, 7), (6, 2), (6, 6)])
 
     # generate a random solution and evaluate it:
     #randomSolution = random.sample(range(len(tsp)), len(tsp))
