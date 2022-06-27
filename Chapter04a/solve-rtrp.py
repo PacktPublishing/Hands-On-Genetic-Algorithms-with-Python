@@ -1,6 +1,7 @@
 from deap import base
 from deap import creator
 from deap import tools
+from deap import algorithms
 
 import random
 import array
@@ -9,23 +10,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import tsp
-import elitism
+import rtrp
+import elitism_plus
 
 # set the random seed for repeatable results
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 # create the desired traveling salesman problem instace:
-TSP_NAME = "bayg29"  # name of problem
-tsp = tsp.TravelingSalesmanProblem(TSP_NAME)
+RTRP_ORDER = 8  # name of problem
+RTRP_HOLES = [(1, 1), (0, 4), (2, 3), (2, 5), (3, 2), (4, 7), (6, 2), (6, 6)]
+roundtrip = rtrp.RoundTripProblem(RTRP_ORDER, RTRP_HOLES)
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 300
-MAX_GENERATIONS = 200
-HALL_OF_FAME_SIZE = 30
+POPULATION_SIZE = 30000
+MAX_GENERATIONS = 500
+HALL_OF_FAME_SIZE = 300
 P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.1   # probability for mutating an individual
+P_MUTATION = 0.2   # probability for mutating an individual
 
 toolbox = base.Toolbox()
 
@@ -36,7 +38,7 @@ creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", array.array, typecode='i', fitness=creator.FitnessMin)
 
 # create an operator that generates randomly shuffled indices:
-toolbox.register("randomOrder", random.sample, range(len(tsp)), len(tsp))
+toolbox.register("randomOrder", random.sample, range(len(roundtrip)), len(roundtrip))
 
 # create the individual creation operator to fill up an Individual instance with shuffled indices:
 toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.randomOrder)
@@ -46,17 +48,17 @@ toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individual
 
 
 # fitness calculation - compute the total distance of the list of cities represented by indices:
-def tpsDistance(individual):
-    return tsp.getTotalDistance(individual),  # return a tuple
+def rtrp_distance(individual):
+    return roundtrip.getTotalDistance(individual),  # return a tuple
 
 
-toolbox.register("evaluate", tpsDistance)
+toolbox.register("evaluate", rtrp_distance)
 
 
 # Genetic operators:
 toolbox.register("select", tools.selTournament, tournsize=2)
 toolbox.register("mate", tools.cxOrdered)
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=1.0/len(tsp))
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb=1.0/len(roundtrip))
 
 
 # Genetic Algorithm flow:
@@ -74,8 +76,18 @@ def main():
     hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
     # perform the Genetic Algorithm flow with hof feature added:
-    population, logbook = elitism.eaSimpleWithElitism(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
-                                              ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
+    population, logbook = elitism_plus.eaSimpleWithElitism(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
+                                              ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True,
+                                                           stop=len(roundtrip), stuck=(50, 'chernobyl'))
+
+    # population, logbook = algorithms.eaSimple(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
+    #                                                        ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
+    #                                                        verbose=True)
+
+    # print hall of fame members info:
+    print("- Best solutions are:")
+    for i in range(HALL_OF_FAME_SIZE):
+        print(i, ": ", hof.items[i].fitness.values[0], " -> ", hof.items[i])
 
     # print best individual info:
     best = hof.items[0]
@@ -83,12 +95,11 @@ def main():
     print("-- Best Ever Fitness = ", best.fitness.values[0])
 
     # plot best solution:
-    plt.figure(1)
-    tsp.plotData(best)
+    roundtrip.plotData(best)
 
     # plot statistics:
     minFitnessValues, meanFitnessValues = logbook.select("min", "avg")
-    plt.figure(2)
+    plt.figure(1)
     sns.set_style("whitegrid")
     plt.plot(minFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')

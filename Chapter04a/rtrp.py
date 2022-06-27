@@ -2,6 +2,7 @@ import numpy as np
 import turtle
 from itertools import product
 import random
+import time
 
 
 class RoundTripProblem:
@@ -32,25 +33,39 @@ class RoundTripProblem:
         self.tiles = [coord for coord in product(range(self.order), repeat=2) if coord not in self.holes]
         self.tiles_dict = {i: j for i, j in enumerate(self.tiles)}
 
-    def getTotalDistance(self, indices):
-        """Calculates the total distance of the path described by the given indices of the cities
+    def __len__(self):
+        """
+        returns the number of indices used to internally represent the RTRP
+        :return: the number of indices used to internally represent the RTRP
+        """
+        return len(self.tiles)
 
-        :param indices: A list of ordered city indices describing the given path.
+    def getTotalDistance(self, indices):
+        """Calculates the total distance of the path described by the given indices of the tiles
+
+        :param indices: A list of ordered tile indices describing the given path.
         :return: total distance of the path described by the given indices
         """
-        # distance between th elast and first city:
-        distance = self.distances[indices[-1]][indices[0]]
 
-        # add the distance between each pair of consequtive cities:
+        def calculate_distance(start, stop):
+            x = abs(start[0] - stop[0])
+            y = abs(start[1] - stop[1])
+
+            return x + y
+
+        # distance between the last and first tile:
+        distance = calculate_distance(self.tiles_dict[indices[-1]], self.tiles_dict[indices[0]])
+
+        # add the distance between each pair of consecutive tiles:
         for i in range(len(indices) - 1):
-            distance += self.distances[indices[i]][indices[i + 1]]
+            distance += calculate_distance(self.tiles_dict[indices[i]], self.tiles_dict[indices[i+1]])
 
         return distance
 
-    def plotData(self, path):
+    def plotData(self, indices):
         """plots the path described by the given indices of the tiles.
 
-        :param path: A list of ordered tile indices describing the given path.
+        :param indices: A list of ordered tile indices describing the given path.
         :return: nothing
         """
 
@@ -72,6 +87,8 @@ class RoundTripProblem:
                 bob.forward(step * order)
 
         def draw_square(ind, pos0, size, fill=False):
+            speed = ind.speed()
+            ind.speed(10)
             pos_xn, pos_yn = pos0
             ind.penup()
             ind.setheading(0)
@@ -84,13 +101,13 @@ class RoundTripProblem:
                 ind.right(90)
             if fill:
                 ind.end_fill()
+            ind.speed(speed)
 
-        def draw_grid(ind, order):
+        def draw_grid(ind, order, step):
 
             speed = ind.speed()
             ind.speed(10)
             pos_x, pos_y = -300, 300
-            step = int(600 / order)
 
             draw_lines(ind, (pos_x, pos_y), 'h', step, order)
             draw_lines(ind, (pos_x, pos_y), 'v', step, order)
@@ -98,30 +115,27 @@ class RoundTripProblem:
             ind.speed(speed)
 
         # draw the basic playing field
-        draw_grid(bob, self.order)
-
-        step1 = int(600 / self.order)
+        step0 = int(600 / self.order)
+        draw_grid(bob, self.order, step0)
 
         for hole in self.holes:
-            hole_x = hole[0] * step1 - 300
-            hole_y = -hole[1] * step1 + 300
-            draw_square(bob, (hole_x, hole_y), step1, True)
+            hole_x = hole[0] * step0 - 300
+            hole_y = -hole[1] * step0 + 300
+            draw_square(bob, (hole_x, hole_y), step0, True)
 
-        # step0 = int(600 / self.order)
+        start_x = self.tiles_dict[indices[0]][0] * step0 - 300 + 0.5 * step0
+        start_y = -self.tiles_dict[indices[0]][1] * step0 + 300 - 0.5 * step0
 
-        # start_x = coordinate_dict[path[0]][0] * step0 - 300 + 0.5 * step0
-        # start_y = -coordinate_dict[path[0]][0] * step0 + 300 - 0.5 * step0
-        #
-        # bob.penup()
-        # bob.setposition(start_x, start_y)
-        # bob.pendown()
-        # bob.pencolor('red')
-        #
-        # for waypoint in path[1:]:
-        #     new_x = coordinate_dict[waypoint][0] * step0 - 300 + 0.5 * step0
-        #     new_y = -coordinate_dict[waypoint][1] * step0 + 300 - 0.5 * step0
-        #     bob.setposition(new_x, new_y)
-        #     time.sleep(1)
+        bob.penup()
+        bob.setposition(start_x, start_y)
+        bob.pendown()
+        bob.pencolor('red')
+
+        for waypoint in indices[1:]:
+            new_x = self.tiles_dict[waypoint][0] * step0 - 300 + 0.5 * step0
+            new_y = -self.tiles_dict[waypoint][1] * step0 + 300 - 0.5 * step0
+            bob.setposition(new_x, new_y)
+            time.sleep(0.1)
 
         turtle.done()
 
@@ -132,7 +146,9 @@ def main():
     rtrp = RoundTripProblem(8, [(1, 1), (0, 4), (2, 3), (2, 5), (3, 2), (4, 7), (6, 2), (6, 6)])
 
     # generate a random solution and evaluate it:
-    #randomSolution = random.sample(range(len(tsp)), len(tsp))
+    random.seed(42)
+    randomSolution = random.sample(range(len(rtrp)), len(rtrp))
+    print(randomSolution)
 
     # see http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/bayg29.opt.tour
     # optimalSolution = [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23]
@@ -142,7 +158,8 @@ def main():
     # print("Optimal distance = ", tsp.getTotalDistance(optimalSolution))
 
     # plot the solution:
-    rtrp.plotData([])
+    rtrp.plotData(randomSolution)
+    print(rtrp.getTotalDistance(randomSolution))
 
 
 if __name__ == "__main__":

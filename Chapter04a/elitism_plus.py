@@ -4,7 +4,7 @@ import random
 
 
 def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, stuck=(1e9, None)):
+             halloffame=None, verbose=__debug__, stop=0, stuck=(1e9, None)):
     """This algorithm is similar to DEAP eaSimple() algorithm, with the modification that
     halloffame is used to implement an elitism mechanism. The individuals contained in the
     halloffame are directly injected into the next generation and are not subject to the
@@ -102,7 +102,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
         last_min = new_min
 
         # early stopping, if zero is reached (optimum)
-        if last_min == 0:
+        if last_min == stop:
             break
 
     return population, logbook
