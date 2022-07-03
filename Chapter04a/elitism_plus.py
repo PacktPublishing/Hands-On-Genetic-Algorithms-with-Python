@@ -31,7 +31,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
         print(logbook.stream)
 
     stuck_count = 0
-    last_min = False
+    last_max = False
 
     save_mutpb = mutpb
     radiation = 0
@@ -56,7 +56,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
                 halloffame.clear()
             if stuck[1] == 'chernobyl':
                 print('radiation leak')
-                mutpb = 0.5
+                mutpb = 0.6
                 radiation = stuck[0]
             stuck_count = 0
         else:
@@ -88,10 +88,10 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
             print(logbook.stream)
 
         # Check if minimum has change vs previous iteration, else rais stuck_count
-        new_min = min(logbook.select('min'))
+        new_max = max(logbook.select('max'))
 
-        if last_min:
-            if new_min == last_min:
+        if last_max:
+            if new_max == last_max:
                 stuck_count += 1
             else:
                 stuck_count = 0
@@ -99,10 +99,10 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
         if radiation == 0:
             print(f'stuck count is {stuck_count}')
 
-        last_min = new_min
+        last_max = new_max
 
         # early stopping, if zero is reached (optimum)
-        if last_min == stop:
+        if last_max == stop:
             break
 
     return population, logbook

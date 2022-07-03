@@ -3,8 +3,6 @@ import turtle
 from itertools import product
 import random
 import time
-import copy
-from joblib import Parallel, delayed
 
 
 class RoundTripProblem:
@@ -33,8 +31,7 @@ class RoundTripProblem:
 
         # build coordinate list and remove holes
         self.tiles = [coord for coord in product(range(self.order), repeat=2) if coord not in self.holes]
-        self.orient_dict = {0: (0, 1), 1: (1, 0), 2: (0, -1), 3: (-1, 0)}
-        self.possible_dirs = self.getPossibleDirs(self.tiles)
+        self.tiles_dict = {i: j for i, j in enumerate(self.tiles)}
 
     def __len__(self):
         """
@@ -43,60 +40,32 @@ class RoundTripProblem:
         """
         return len(self.tiles)
 
-    def getPossibleDirs(self, tiles):
-        """For a list of tiles generate a list of lists with potential outgoing arrows from each tile.
+    def getTotalDistance(self, indices):
+        """Calculates the total distance of the path described by the given indices of the tiles
 
-        :param tiles: list of x, y tuples.
-        :return: list of lists of integers between 0 and 3 with same length as tiles.
+        :param indices: A list of ordered tile indices describing the given path.
+        :return: total distance of the path described by the given indices
         """
 
-        dirs_list = list()
-        for i in range(len(tiles)):
-            dirs = list()
-            for j in range(4):
-                tile = tiles[i]
-                offsets = self.orient_dict[j]
-                tile_next = (tile[0] + offsets[0], tile[1] + offsets[1])
-                if tile_next in tiles:
-                    dirs.append(j)
-            dirs_list.append(dirs)
+        def calculate_distance(start, stop):
+            x = abs(start[0] - stop[0])
+            y = abs(start[1] - stop[1])
 
-        return dirs_list
+            return x + y
 
-    def get_sequence(self, start, tiles, directions):
+        # distance between the last and first tile:
+        distance = calculate_distance(self.tiles_dict[indices[-1]], self.tiles_dict[indices[0]])
 
-        directions_dict = dict(zip(tiles, directions))
-        to_walk = tiles.copy()
-        path_walked = [start]
-        dir_walked = []
+        # add the distance between each pair of consecutive tiles:
+        for i in range(len(indices) - 1):
+            distance += calculate_distance(self.tiles_dict[indices[i]], self.tiles_dict[indices[i+1]])
 
-        while True:
-            right, up = self.orient_dict[directions_dict[start]]
-            start = (start[0] + right, start[1] + up)
-            if start in to_walk:
-                to_walk.remove(start)
-                path_walked.append(start)
-                dir_walked.append((right, up))
-            else:
-                break
+        return distance
 
-        return len(path_walked), path_walked
+    def plotData(self, indices):
+        """plots the path described by the given indices of the tiles.
 
-    def get_longest_sequence(self, directions):
-        longest = 0
-        longest_path = self.tiles[0]
-        for tile in self.tiles:
-            length, path = self.get_sequence(tile, self.tiles, directions)
-            if length > longest:
-                longest = length
-                longest_path = path
-
-        return longest, longest_path
-
-    def plotData(self, directions):
-        """plots the path described by the given directions starting from the tiles.
-
-        :param directions: A list of integers 0 to 3 describing the given direction starting from a tile.
+        :param indices: A list of ordered tile indices describing the given path.
         :return: nothing
         """
 
@@ -149,37 +118,24 @@ class RoundTripProblem:
         step0 = int(600 / self.order)
         draw_grid(bob, self.order, step0)
 
-        # draw holes (i.e. tiles not to be used)
         for hole in self.holes:
             hole_x = hole[0] * step0 - 300
             hole_y = -hole[1] * step0 + 300
             draw_square(bob, (hole_x, hole_y), step0, True)
 
-        # draw solution path
-        _, path = self.get_longest_sequence(directions)
-
-        # starts = set(self.tiles)
-        #
-        # while starts:
-        #     tile = starts.pop()
-        #     length, path = self.get_sequence(tile, self.tiles, directions)
-        #     for point in path:
-        #         starts.discard(point)
-        #
-        #     if length > 1:
-
-        start_x = path[0][0] * step0 - 300 + 0.5 * step0
-        start_y = -path[0][1] * step0 + 300 - 0.5 * step0
+        start_x = self.tiles_dict[indices[0]][0] * step0 - 300 + 0.5 * step0
+        start_y = -self.tiles_dict[indices[0]][1] * step0 + 300 - 0.5 * step0
 
         bob.penup()
         bob.setposition(start_x, start_y)
         bob.pendown()
         bob.pencolor('red')
 
-        for waypoint in path[1:]:
-            new_x = waypoint[0] * step0 - 300 + 0.5 * step0
-            new_y = -waypoint[1] * step0 + 300 - 0.5 * step0
+        for waypoint in indices[1:]:
+            new_x = self.tiles_dict[waypoint][0] * step0 - 300 + 0.5 * step0
+            new_y = -self.tiles_dict[waypoint][1] * step0 + 300 - 0.5 * step0
             bob.setposition(new_x, new_y)
+            time.sleep(0.1)
 
         turtle.done()
 
@@ -191,20 +147,19 @@ def main():
 
     # generate a random solution and evaluate it:
     random.seed(42)
-    randomSolution = random.choices(range(0, 4), k=len(rtrp))
+    randomSolution = random.sample(range(len(rtrp)), len(rtrp))
     print(randomSolution)
-    print(rtrp.get_longest_sequence(randomSolution))
 
     # see http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/bayg29.opt.tour
     # optimalSolution = [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23]
 
-    # print("Problem tiles: ", rtrp.tiles)
-    # # print("Optimal solution = ", optimalSolution)
-    # # print("Optimal distance = ", tsp.getTotalDistance(optimalSolution))
-    #
-    # # plot the solution:
+    print("Problem tiles: ", rtrp.tiles)
+    # print("Optimal solution = ", optimalSolution)
+    # print("Optimal distance = ", tsp.getTotalDistance(optimalSolution))
+
+    # plot the solution:
     rtrp.plotData(randomSolution)
-    # print(rtrp.getTotalDistance(randomSolution))
+    print(rtrp.getTotalDistance(randomSolution))
 
 
 if __name__ == "__main__":
