@@ -158,16 +158,6 @@ class RoundTripProblem:
         # draw solution path
         _, path = self.get_longest_sequence(directions)
 
-        # starts = set(self.tiles)
-        #
-        # while starts:
-        #     tile = starts.pop()
-        #     length, path = self.get_sequence(tile, self.tiles, directions)
-        #     for point in path:
-        #         starts.discard(point)
-        #
-        #     if length > 1:
-
         start_x = path[0][0] * step0 - 300 + 0.5 * step0
         start_y = -path[0][1] * step0 + 300 - 0.5 * step0
 

@@ -57,7 +57,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
             if stuck[1] == 'chernobyl':
                 print('radiation leak')
                 mutpb = 0.6
-                radiation = stuck[0]
+                radiation = 5000
             stuck_count = 0
         else:
             # Use defined selection algorithm

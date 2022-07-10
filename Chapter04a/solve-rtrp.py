@@ -14,8 +14,10 @@ import seaborn as sns
 import rtrp
 import elitism_plus
 
+import multiprocessing
+
 # set the random seed for repeatable results
-RANDOM_SEED = 42
+RANDOM_SEED = 100
 random.seed(RANDOM_SEED)
 
 # create the desired traveling salesman problem instace:
@@ -24,9 +26,9 @@ RTRP_HOLES = [(1, 1), (0, 4), (2, 3), (2, 5), (3, 2), (4, 7), (6, 2), (6, 6)]
 roundtrip = rtrp.RoundTripProblem(RTRP_ORDER, RTRP_HOLES)
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 40000
+POPULATION_SIZE = 50000
 MAX_GENERATIONS = 300
-HALL_OF_FAME_SIZE = 40
+HALL_OF_FAME_SIZE = 100
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.2   # probability for mutating an individual
 
@@ -84,9 +86,9 @@ toolbox.register("evaluate", rtrp_distance)
 # Genetic operators:
 toolbox.register("select", tools.selTournament, tournsize=2)
 # toolbox.register("select", tools.selRoulette)  # extremely slow
-toolbox.register("mate", tools.cxTwoPoint)  # 80
+toolbox.register("mate", tools.cxOnePoint)  # 80
 # toolbox.register("mate", tools.cxUniformPartialyMatched, indpb=1.0/len(roundtrip))  # 72
-toolbox.register("mutate", mutVariableInt, pool=roundtrip.possible_dirs, indpb=1.0 / len(roundtrip))
+toolbox.register("mutate", mutVariableInt, pool=roundtrip.possible_dirs, indpb=1.5 / len(roundtrip))
 
 
 # Genetic Algorithm flow:
@@ -106,7 +108,7 @@ def main():
     # perform the Genetic Algorithm flow with hof feature added:
     population, logbook = elitism_plus.eaSimpleWithElitism(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
                                               ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True,
-                                                           stop=len(roundtrip) + 1, stuck=(50, 'chernobyl'))
+                                                           stop=len(roundtrip), stuck=(50, 'chernobyl'))
 
     # population, logbook = algorithms.eaSimple(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
     #                                                        ngen=MAX_GENERATIONS, stats=stats, halloffame=hof,
@@ -140,4 +142,8 @@ def main():
 
 
 if __name__ == "__main__":
+
+    pool = multiprocessing.Pool()
+    toolbox.register("map", pool.map)
+
     main()
