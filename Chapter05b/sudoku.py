@@ -1,10 +1,4 @@
-import random
-
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import numpy as np
-import math
 
 
 class SudokuProblem:
@@ -65,7 +59,7 @@ class SudokuProblem:
 
         # vertical violations:
         for i in range(9):
-            violations += 9 - len(set(mapped_solution[:, i]))
+            violations += 9 - len(np.unique(mapped_solution[:, i]))
 
         # # horizontal violations:
         # for i in range(9):
@@ -74,7 +68,7 @@ class SudokuProblem:
         # sector violations:
         for i in range(0, 8, 3):
             for j in range(0, 8, 3):
-                violations += 9 - len(set(np.reshape(mapped_solution[i:i+3, j:j+3], -1, 1)))
+                violations += 9 - len(np.unique(mapped_solution[i:i+3, j:j+3]))
 
         # if 2 <= violations <= 4:
         #     violations = 2

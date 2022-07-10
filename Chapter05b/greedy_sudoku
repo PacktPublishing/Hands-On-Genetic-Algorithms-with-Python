@@ -1,5 +1,6 @@
 from copy import deepcopy
 import numpy as np
+from itertools import chain
 
 SUDOKU_PUZZLE = [
     [0, 0, 0,   0, 1, 3,   0, 0, 0],
@@ -19,23 +20,27 @@ problem = np.array(SUDOKU_PUZZLE)
 
 solution = problem.copy()
 
-possibilities = [[0]*9]*9
+possibilities = list()
 for row in range(9):
+    row_list = list()
     for col in range(9):
-        if solution[row][col] > 0:
-            possibilities[row][col] = {solution[row][col]}
+        if solution[row, col] > 0:
+            row_list.append({solution[row, col]})
         else:
-            possibilities[row][col] = set(range(1, 10))
+            row_list.append(set(range(1, 10)))
+    possibilities.append(row_list)
 
 possible = set(range(1, 10))
 
 progress = True
 
 print(possibilities)
+print(solution)
 
 while progress:
     progress = False
 
+    # Find solution from mutual exclusion of fixed fields
     for row in range(9):
         for col in range(9):
             if solution[row, col] == 0:
@@ -45,12 +50,55 @@ while progress:
                 possible_range = possible_range - set(solution[:, col])
                 possible_range = possible_range - set(solution[square_row:square_row + 3, square_col:square_col + 3].flat)
 
+                if len(possible_range) < len(possibilities[row][col]):
+                    progress = True
+
+                possibilities[row][col] = possible_range
+
                 if len(possible_range) == 1:
-                    solution[row, col] = possible_range[0]
+                    solution[row, col] = possible_range.pop()
+
+                print(f'coord {row}, {col}')
+                print(possibilities[row][col])
+                print(possible_range)
+                print('neu')
+                possibilities[row][col] = possible_range
+                print(possibilities[row][col])
+
+    # Find solution from mutual exclusion of solution possibilities
+    for row in range(9):
+        for col in range(9):
+            possible = possibilities[row][col]
+            if len(possible) > 1:
+                red_possibilities = deepcopy(possibilities)
+                red_possibilities[row][col] = set()
+
+                square_row = row // 3
+                square_col = col // 3
+
+                test_grid = [
+                    [{1, 2, 3}, {4, 5, 6}, {7, 8, 9}],
+                    [{11, 12, 13}, {14, 15, 16}, {17, 18, 19}]
+                ]
+
+                print(set(chain(*test_grid[0])))
+                print(set(chain(*[el[0] for el in test_grid])))
+                print(set(chain(*[el[i] for el in test_grid for i in range(2)])))
+
+                possible_range = possible - set(solution[row, :])
+                possible_range = possible_range - set(solution[:, col])
+                possible_range = possible_range - set(
+                    solution[square_row:square_row + 3, square_col:square_col + 3].flat)
 
                 if len(possible_range) < len(possibilities[row][col]):
                     progress = True
 
+                possibilities[row][col] = possible_range
+
+                if len(possible_range) == 1:
+                    solution[row, col] = possible_range.pop()
+
+                print(f'coord {row}, {col}')
                 print(possibilities[row][col])
                 print(possible_range)
                 print('neu')
