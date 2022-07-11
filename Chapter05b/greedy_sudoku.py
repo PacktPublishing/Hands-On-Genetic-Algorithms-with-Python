@@ -1,6 +1,8 @@
 from copy import deepcopy
 import numpy as np
 from itertools import chain
+import functools
+import operator
 
 SUDOKU_PUZZLE = [
     [0, 0, 0,   0, 1, 3,   0, 0, 0],
@@ -30,7 +32,7 @@ for row in range(9):
             row_list.append(set(range(1, 10)))
     possibilities.append(row_list)
 
-possible = set(range(1, 10))
+full_range = set(range(1, 10))
 
 progress = True
 
@@ -46,7 +48,7 @@ while progress:
             if solution[row, col] == 0:
                 square_row = row // 3
                 square_col = col // 3
-                possible_range = possible - set(solution[row, :])
+                possible_range = full_range - set(solution[row, :])
                 possible_range = possible_range - set(solution[:, col])
                 possible_range = possible_range - set(solution[square_row:square_row + 3, square_col:square_col + 3].flat)
 
@@ -57,13 +59,7 @@ while progress:
 
                 if len(possible_range) == 1:
                     solution[row, col] = possible_range.pop()
-
-                print(f'coord {row}, {col}')
-                print(possibilities[row][col])
-                print(possible_range)
-                print('neu')
-                possibilities[row][col] = possible_range
-                print(possibilities[row][col])
+                    print(f'found fixed solution for {row}, {col}')
 
     # Find solution from mutual exclusion of solution possibilities
     for row in range(9):
@@ -76,34 +72,14 @@ while progress:
                 square_row = row // 3
                 square_col = col // 3
 
-                test_grid = [
-                    [{1, 2, 3}, {4, 5, 6}, {7, 8, 9}],
-                    [{11, 12, 13}, {14, 15, 16}, {17, 18, 19}]
-                ]
+                possible = possible - set(chain(*red_possibilities[row]))
+                possible = possible - set(chain(*[el[col] for el in red_possibilities]))
+                possible = possible - set(chain(*[el[i]
+                                                  for el in red_possibilities[square_row: square_row + 3]
+                                                  for i in range(square_col, square_col + 3)]))
 
-                print(set(chain(*test_grid[0])))
-                print(set(chain(*[el[0] for el in test_grid])))
-                print(set(chain(*[el[i] for el in test_grid for i in range(2)])))
-
-                possible_range = possible - set(solution[row, :])
-                possible_range = possible_range - set(solution[:, col])
-                possible_range = possible_range - set(
-                    solution[square_row:square_row + 3, square_col:square_col + 3].flat)
-
-                if len(possible_range) < len(possibilities[row][col]):
+                if len(possible) == 1:
+                    possibilities[row][col] = possible
+                    solution[row, col] = possible.pop()
                     progress = True
-
-                possibilities[row][col] = possible_range
-
-                if len(possible_range) == 1:
-                    solution[row, col] = possible_range.pop()
-
-                print(f'coord {row}, {col}')
-                print(possibilities[row][col])
-                print(possible_range)
-                print('neu')
-                possibilities[row][col] = possible_range
-                print(possibilities[row][col])
-
-    print(solution)
-    print(possibilities)
+                    print(f'found range solution for {row}, {col}')
