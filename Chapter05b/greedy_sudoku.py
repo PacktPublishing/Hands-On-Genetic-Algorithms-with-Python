@@ -3,6 +3,7 @@ import numpy as np
 from itertools import chain
 import functools
 import operator
+import math
 
 SUDOKU_PUZZLE = [
     [0, 0, 0,   0, 1, 3,   0, 0, 0],
@@ -50,7 +51,9 @@ while progress:
                 square_col = col // 3
                 possible_range = full_range - set(solution[row, :])
                 possible_range = possible_range - set(solution[:, col])
-                possible_range = possible_range - set(solution[square_row:square_row + 3, square_col:square_col + 3].flat)
+                possible_range = possible_range - set(solution[
+                                                      square_row * 3: square_row * 3 + 3,
+                                                      square_col * 3: square_col * 3 + 3].flat)
 
                 if len(possible_range) < len(possibilities[row][col]):
                     progress = True
@@ -58,7 +61,7 @@ while progress:
                 possibilities[row][col] = possible_range
 
                 if len(possible_range) == 1:
-                    solution[row, col] = possible_range.pop()
+                    solution[row, col] = min(possible_range)
                     print(f'found fixed solution for {row}, {col}')
 
     # Find solution from mutual exclusion of solution possibilities
@@ -72,14 +75,36 @@ while progress:
                 square_row = row // 3
                 square_col = col // 3
 
-                possible = possible - set(chain(*red_possibilities[row]))
-                possible = possible - set(chain(*[el[col] for el in red_possibilities]))
-                possible = possible - set(chain(*[el[i]
-                                                  for el in red_possibilities[square_row: square_row + 3]
-                                                  for i in range(square_col, square_col + 3)]))
+                overlap1 = possible - set(chain(*red_possibilities[row]))
+                overlap2 = possible - set(chain(*[el[col] for el in red_possibilities]))
+                overlap3 = possible - set(chain(*[el[i]
+                                                  for el in red_possibilities[square_row * 3: square_row * 3 + 3]
+                                                  for i in range(square_col * 3, square_col * 3 + 3)]))
 
-                if len(possible) == 1:
-                    possibilities[row][col] = possible
-                    solution[row, col] = possible.pop()
-                    progress = True
-                    print(f'found range solution for {row}, {col}')
+                for overlap in [overlap1, overlap2, overlap3]:
+                    if len(overlap) == 1:
+                        print(f'found range solution for {row}, {col}: ', overlap)
+                        possibilities[row][col] = overlap
+                        solution[row, col] = min(overlap)
+                        progress = True
+                        break
+
+print(possibilities)
+print(solution)
+
+total = 1
+reihenfolge = 1
+for row in possibilities:
+    non_fixed = 0
+    for col in row:
+        total *= len(col)
+        non_fixed += len(col)>1
+
+    reihenfolge *= math.factorial(non_fixed)
+
+
+print('combinatorial: ', total)
+print('reihenfolge: ', reihenfolge)
+print(total / reihenfolge)
+
+print(functools.reduce(operator.mul, [math.factorial(el) for el in np.sum((problem==0), axis=1)])/reihenfolge)
