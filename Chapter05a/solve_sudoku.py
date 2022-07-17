@@ -1,10 +1,8 @@
 from deap import base
 from deap import creator
 from deap import tools
-from deap import algorithms
 
 import random
-import array
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,43 +10,7 @@ import seaborn as sns
 
 import elitism
 import sudoku
-
-# problem constants:
-SUDOKU_PUZZLE = [
-    [0, 0, 0,   0, 1, 3,   0, 0, 0],
-    [0, 0, 0,   0, 0, 0,   6, 7, 4],
-    [0, 4, 9,   0, 0, 0,   0, 0, 0],
-
-    [0, 0, 0,   0, 0, 0,   5, 9, 0],
-    [0, 0, 0,   0, 8, 7,   0, 0, 0],
-    [6, 9, 1,   0, 0, 0,   0, 0, 0],
-
-    [1, 0, 0,   7, 0, 4,   0, 0, 0],
-    [2, 0, 0,   6, 0, 0,   0, 0, 1],
-    [0, 5, 0,   0, 0, 0,   0, 4, 3]
-]
-
-# Genetic Algorithm constants:
-POPULATION_SIZE = 20000
-MAX_GENERATIONS = 1000
-HALL_OF_FAME_SIZE = 1000
-P_CROSSOVER = 0.9  # probability for crossover
-P_MUTATION = 0.2  # probability for mutating an individual
-
-# set the random seed for repeatable results
-RANDOM_SEED = 42
-random.seed(RANDOM_SEED)
-
-# create the desired sudoku problem
-n_sudoku = sudoku.SudokuProblem(SUDOKU_PUZZLE)
-
-toolbox = base.Toolbox()
-
-# define a single objective, minimizing fitness strategy:
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-
-# create the Individual class based on list of lists:
-creator.create("Individual", list, typecode='i', fitness=creator.FitnessMin)
+import greedy_sudoku
 
 
 def random_sudoku(size, lengths):
@@ -60,51 +22,19 @@ def random_sudoku(size, lengths):
     return new_sudoku
 
 
-# create an operator that generates randomly shuffled indices:
-toolbox.register("randomSudoku", random_sudoku, n_sudoku.size, n_sudoku.n_empty)
-
-# create the individual creation operator to fill up an Individual instance with shuffled indices:
-toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.randomSudoku)
-
-# create the population creation operator to generate a list of individuals:
-toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individualCreator)
-
-
 # fitness calculation - compute the total distance of the list of cities represented by indices:
-def get_violations_count(individual):
-    violations = n_sudoku.get_position_violation_count(individual)
+def get_violations_count(individual, sudoku_problem):
+    violations = sudoku_problem.get_position_violation_count(individual)
     return violations,  # return a tuple
 
 
-toolbox.register("evaluate", get_violations_count)
-
-
 # Genetic operators:
-
-def multiline_upmx(ind1, ind2, indpb):
-    pairs = list(zip(ind1, ind2))
-    for i in range(len(pairs)):
-        ind_i1, ind_i2 = tools.cxUniformPartialyMatched(pairs[i][0], pairs[i][1], indpb)
-        ind1[i] = ind_i1
-        ind2[i] = ind_i2
-
-    return ind1, ind2
-
-
 def swap_cx(ind1, ind2, indpb):
     for i in range(len(ind1)):
         if random.random() <= indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
 
     return ind1, ind2
-
-
-def multiline_shuffle_ind(ind, indpb):
-    for i in range(len(ind)):
-        ind_i = tools.mutShuffleIndexes(ind[i], indpb)
-        ind[i] = ind_i[0]
-
-    return ind,
 
 
 def simple_swap_mutation(ind, indpb):
@@ -120,13 +50,45 @@ def np_equal(a, b):
     return np.all(a == b)
 
 
-toolbox.register("select", tools.selTournament, tournsize=2)
-toolbox.register("mate", swap_cx, indpb=1.0/len(SUDOKU_PUZZLE))
-toolbox.register("mutate", simple_swap_mutation, indpb=1.0/len(SUDOKU_PUZZLE))
+# Genetic algorithm main flow:
+def ga_main(partial_solution):
 
+    # Genetic Algorithm constants:
+    POPULATION_SIZE = 10000
+    MAX_GENERATIONS = 1000
+    HALL_OF_FAME_SIZE = 500
+    P_CROSSOVER = 0.9  # probability for crossover
+    P_MUTATION = 0.2  # probability for mutating an individual
 
-# Genetic Algorithm flow:
-def main():
+    # set the random seed for repeatable results
+    RANDOM_SEED = 42
+    random.seed(RANDOM_SEED)
+
+    # create the desired sudoku problem
+    n_sudoku = sudoku.SudokuProblem(partial_solution)
+
+    toolbox = base.Toolbox()
+
+    # define a single objective, minimizing fitness strategy:
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+
+    # create the Individual class based on list of lists:
+    creator.create("Individual", list, typecode='i', fitness=creator.FitnessMin)
+
+    # create an operator that generates randomly shuffled indices:
+    toolbox.register("randomSudoku", random_sudoku, n_sudoku.size, n_sudoku.n_empty)
+
+    # create the individual creation operator to fill up an Individual instance with shuffled indices:
+    toolbox.register("individualCreator", tools.initIterate, creator.Individual, toolbox.randomSudoku)
+
+    # create the population creation operator to generate a list of individuals:
+    toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individualCreator)
+
+    toolbox.register("evaluate", get_violations_count, sudoku_problem=n_sudoku)
+
+    toolbox.register("select", tools.selTournament, tournsize=2)
+    toolbox.register("mate", swap_cx, indpb=1.0 / len(SUDOKU_PUZZLE))
+    toolbox.register("mutate", simple_swap_mutation, indpb=1.0 / len(SUDOKU_PUZZLE))
 
     # create initial population (generation 0):
     new_population = toolbox.populationCreator(n=POPULATION_SIZE)
@@ -164,12 +126,37 @@ def main():
     plt.title('Min and Average fitness over Generations')
 
     # plot best solution:
-    sns.set_style("whitegrid", {'axes.grid' : False})
+    sns.set_style("whitegrid", {'axes.grid': False})
     n_sudoku.plot_solution(hof.items[0])
 
     # show both plots:
     plt.show()
 
 
+# Hybrid solution flow:
+def main(problem):
+    # try greedy solution
+    greedy_solution = greedy_sudoku.greedy_search(problem)
+    print("Greedy solution is :\n", greedy_solution)
+    empty = (greedy_solution == 0).sum()
+    if empty == 0:
+        print("Solution is :\n", greedy_solution)
+    else:
+        ga_main(greedy_solution)
+
+
 if __name__ == "__main__":
-    main()
+    # problem constants:
+    SUDOKU_PUZZLE = [
+            [0, 3, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 9, 5, 0, 0, 0],
+            [0, 0, 8, 0, 0, 0, 0, 6, 0],
+            [8, 0, 0, 0, 6, 0, 0, 0, 0],
+            [4, 0, 0, 8, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 2, 0, 0, 0, 0],
+            [0, 6, 0, 0, 0, 0, 2, 8, 0],
+            [0, 0, 0, 4, 1, 9, 0, 0, 5],
+            [0, 0, 0, 0, 0, 0, 0, 7, 0]
+        ]
+
+    main(SUDOKU_PUZZLE)

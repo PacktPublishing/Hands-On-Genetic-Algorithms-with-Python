@@ -20,7 +20,18 @@ input_array = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0]
-]
+]  # TODO write as nested loop or list comprehension
+
+
+# TODO write child class of Frame containing a structured sudoku cluster of widgets
+# this should either take in problem values or display values from solution steps
+# only integer values allowed
+# should keep values in IntVars within addressable 9x9 array
+# should keep widgets in addressable 9x9 array
+# should provide input possibility for bg and fg, e.g. as nested 9x9 array
+class SudokuFrame(tk.Frame):
+    pass
+
 
 fields = deepcopy(input_array)
 
@@ -69,8 +80,22 @@ def show_content():
                 input_array[row][col] = int(value)
 
 
-start_button = ttk.Button(root, text='Start', command=show_content, padding=5)
+def retrieve(widget):
+    print('retrieve')
+    widget.grid(row=2, column=0)
+
+
+def remove(widget1, widget2):
+    print('remove')
+    widget1.grid_forget()
+    retrieve(widget2)
+
+
+show_button = ttk.Button(root, text='Show', command=show_content, padding=5)
+start_button = ttk.Button(root, text='Start', command=lambda: remove(start_button, show_button), padding=5)
 start_button.grid(row=2, column=0)
+
+
 
 window.mainloop()
 
