@@ -72,6 +72,13 @@ def ga_main(partial_solution):
     # define a single objective, minimizing fitness strategy:
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 
+    # TODO use itertools.product(*possibilities[i]) to generate an array of valid lines only
+    # possibilities can be returned as additional result by the greedy function
+    # the idea is to build individuals by sampling from valid rows
+    # mating happens by swapping rows between two individuals
+    # mutation picks from a list of valid options for a given row
+    # this should massively reduce the number of solution candidates
+
     # create the Individual class based on list of lists:
     creator.create("Individual", list, typecode='i', fitness=creator.FitnessMin)
 

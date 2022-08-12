@@ -2,7 +2,7 @@ from copy import deepcopy
 import numpy as np
 from itertools import chain
 
-SUDOKU_PUZZLE = [
+SOLVABLE = [
     [0, 0, 0,   0, 1, 3,   0, 0, 0],
     [0, 0, 0,   0, 0, 0,   6, 7, 4],
     [0, 4, 9,   0, 0, 0,   0, 0, 0],
@@ -15,6 +15,18 @@ SUDOKU_PUZZLE = [
     [2, 0, 0,   6, 0, 0,   0, 0, 1],
     [0, 5, 0,   0, 0, 0,   0, 4, 3]
 ]
+
+NOT_SOLVABLE = [
+            [0, 3, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 9, 5, 0, 0, 0],
+            [0, 0, 8, 0, 0, 0, 0, 6, 0],
+            [8, 0, 0, 0, 6, 0, 0, 0, 0],
+            [4, 0, 0, 8, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 2, 0, 0, 0, 0],
+            [0, 6, 0, 0, 0, 0, 2, 8, 0],
+            [0, 0, 0, 4, 1, 9, 0, 0, 5],
+            [0, 0, 0, 0, 0, 0, 0, 7, 0]
+        ]
 
 
 def greedy_search(sudoku_problem):
@@ -97,9 +109,12 @@ def greedy_search(sudoku_problem):
                             progress = True
                             break
 
-    return solution
+    return solution, possibilities
 
 
 if __name__=='__main__':
-    print(np.array(SUDOKU_PUZZLE))
-    print(greedy_search(SUDOKU_PUZZLE))
+    print(np.array(SOLVABLE))
+    print(greedy_search(SOLVABLE))
+    print(np.array(NOT_SOLVABLE))
+    print(greedy_search(NOT_SOLVABLE))
+
