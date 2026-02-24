@@ -48,6 +48,7 @@ def eaSimpleWithElitism(population, toolbox, cxpb, mutpb, ngen, stats=None,
 
         # Update the hall of fame with the generated individuals
         halloffame.update(offspring)
+        hof_size = len(halloffame)
 
         # Replace the current population by the offspring
         population[:] = offspring
